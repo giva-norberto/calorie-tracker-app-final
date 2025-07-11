@@ -1,9 +1,12 @@
 [build]
   publish = "dist"
-  command = "npm install && npm run build" # <-- Correção final com 'npm ci'
+  # Usamos 'npm install' que é mais flexível que 'npm ci' sem um lock file
+  command = "npm install && npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
+  # A LINHA MÁGICA: Força o NPM a instalar TODAS as dependências, incluindo as de desenvolvimento.
+  NPM_FLAGS = "--production=false"
 
 [[redirects]]
   from = "/*"
