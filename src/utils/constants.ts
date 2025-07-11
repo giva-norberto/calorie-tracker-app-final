@@ -1,3 +1,5 @@
+// src/utils/constants.ts
+
 // Cores do tema
 export const COLORS = {
   primary: {
@@ -64,3 +66,18 @@ export const Z_INDEX = {
   tooltip: 1060,
   toast: 1070,
 } as const;
+
+// ==================================================================
+// || BLOCO DE CÓDIGO ADICIONADO PARA CORRIGIR O ERRO DE BUILD ||
+// ==================================================================
+// Fatores de Nível de Atividade (TMB Multiplier)
+export const activityFactors = {
+  sedentary: 1.2,       // Sedentário (pouco ou nenhum exercício)
+  light: 1.375,         // Levemente ativo (exercício leve 1-3 dias/semana)
+  moderate: 1.55,       // Moderadamente ativo (exercício moderado 3-5 dias/semana)
+  active: 1.725,        // Muito ativo (exercício pesado 6-7 dias/semana)
+  extra_active: 1.9,    // Extremamente ativo (trabalho físico pesado ou exercício 2x/dia)
+} as const;
+// ==================================================================
+// || FIM DO BLOCO DE CÓDIGO ADICIONADO                            ||
+// ==================================================================
