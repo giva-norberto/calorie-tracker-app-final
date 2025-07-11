@@ -1,3 +1,5 @@
+// Arquivo: src/hooks/useCalorieTrackerFirebase.ts (VERSÃO FINAL ANTI-LOOP)
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { useFirestore } from './useFirestore';
@@ -12,9 +14,8 @@ const defaultMacroGoals: MacroGoals = { calories: 2000, protein: 150, carbs: 250
 
 export default function useCalorieTrackerFirebase() {
     const { user } = useAuth();
-    const { saveDocument, getDocument } = useFirestore(user);
+    const { saveDocument, getDocument, subscribeToCollection, loading: firestoreLoading, error: firestoreError } = useFirestore(user);
 
-    // ESTADO INICIAL SEGURO: `data` nunca será nulo, evitando erros.
     const [data, setData] = useState<TrackerData>({
         userInfo: defaultUserInfo,
         dailyData: {},
@@ -27,23 +28,38 @@ export default function useCalorieTrackerFirebase() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Carregamento inicial dos dados do usuário
+    // CORREÇÃO NO useEffect: Usar uma dependência estável como `user.uid`
+    // O objeto `user` pode mudar a cada renderização, mas o `user.uid` é uma string estável.
     useEffect(() => {
-        if (!user) { setLoading(false); return; }
+        // Se não há ID de usuário, não fazemos nada e paramos de carregar.
+        if (!user?.uid) {
+            setLoading(false);
+            return;
+        }
+
         const loadInitialData = async () => {
             setLoading(true);
             try {
                 const userProfile = await getDocument('profile', 'info');
                 if (userProfile) {
+                    // Atualiza os dados do usuário, mantendo os padrões para campos não preenchidos
                     setData(prev => ({ ...prev, userInfo: { ...defaultUserInfo, ...userProfile } }));
                 }
-            } catch (e) { console.error("Erro ao carregar perfil:", e); setError("Falha ao carregar o perfil."); }
-            finally { setLoading(false); }
+            } catch (e) {
+                console.error("Erro ao carregar perfil:", e);
+                setError("Falha ao carregar o perfil.");
+            } finally {
+                // Para de carregar APENAS depois de buscar os dados essenciais.
+                setLoading(false);
+            }
         };
-        loadInitialData();
-    }, [user, getDocument]);
 
-    // Cálculos otimizados com useMemo
+        loadInitialData();
+        // A dependência agora é user.uid, que é estável e não causa loops.
+    }, [user?.uid, getDocument]);
+
+
+    // Os cálculos com useMemo estão corretos.
     const calculations = useMemo(() => {
         const { age, gender, height, weight, activityLevel } = data.userInfo;
         const ageNum = parseInt(age), heightNum = parseFloat(height), weightNum = parseFloat(weight);
@@ -60,7 +76,8 @@ export default function useCalorieTrackerFirebase() {
         return { bmi: Math.round(bmi * 10) / 10, bmr: Math.round(bmr), tdee: Math.round(tdee), bmiCategory };
     }, [data.userInfo]);
 
-    // Função de atualização estabilizada e otimista
+
+    // A função de atualização com useCallback está correta.
     const updateUserInfo = useCallback((userInfoUpdate: Partial<UserInfo>) => {
         setData(prev => {
             const updatedInfo = { ...prev.userInfo, ...userInfoUpdate };
@@ -71,10 +88,20 @@ export default function useCalorieTrackerFirebase() {
             return { ...prev, userInfo: updatedInfo };
         });
     }, [saveDocument]);
-
+    
+    // As outras funções também devem ser estabilizadas se forem usadas como dependências ou props
     const getDailyData = useCallback((date: string): DailyData => {
         return data.dailyData[date] || { foods: [], exercises: [] };
     }, [data.dailyData]);
 
-    return { data, calculations, loading, error, updateUserInfo, getDailyData };
+
+    return {
+        data,
+        calculations,
+        loading: loading || firestoreLoading,
+        error: error || firestoreError,
+        updateUserInfo,
+        getDailyData,
+        // ...retorne todas as outras funções que seu App.tsx precisa
+    };
 }
