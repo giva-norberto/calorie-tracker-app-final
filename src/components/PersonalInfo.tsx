@@ -227,4 +227,4 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, setUserInfo }) =>
   );
 };
 
-export default PersonalInfo;
+import useDebounce from '../hooks/useDebounce';
