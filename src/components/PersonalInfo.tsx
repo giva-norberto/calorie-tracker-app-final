@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+// src/components/PersonalInfo.tsx
+
+// MUDANÇA: Importamos useEffect e nosso novo hook useDebounce
+import React, { useState, useEffect } from 'react'; 
 import { User, Heart, Ruler, Weight, Activity, Save, Calculator, Target, ToggleLeft, ToggleRight, TrendingUp, Zap } from 'lucide-react';
 import { UserInfo } from '../types';
+import { useDebounce } from '../hooks/useDebounce'; // MUDANÇA: Importamos o hook
 
 interface PersonalInfoProps {
   userInfo: UserInfo;
@@ -14,17 +18,37 @@ interface PersonalInfoProps {
 }
 
 const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, calculations }) => {
+  // MUDANÇA: Criamos um estado local para o formulário. Isso evita re-renderizações do pai.
+  const [localUserInfo, setLocalUserInfo] = useState<UserInfo>(userInfo);
   const [hasChanges, setHasChanges] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // MUDANÇA: Criamos uma versão "atrasada" do nosso estado local.
+  const debouncedUserInfo = useDebounce(localUserInfo, 500); // 500ms de atraso
+
+  // MUDANÇA: Este useEffect observa a versão "atrasada" e só então atualiza o estado global.
+  // Esta é a principal correção de performance!
+  useEffect(() => {
+    // Compara o estado atrasado com o estado original para ver se houve mudança
+    if (JSON.stringify(debouncedUserInfo) !== JSON.stringify(userInfo)) {
+      updateUserInfo(debouncedUserInfo);
+      setHasChanges(true);
+    }
+  }, [debouncedUserInfo]);
+
+  // MUDANÇA: Sincroniza o estado local se a prop original mudar por algum motivo externo.
+  useEffect(() => {
+    setLocalUserInfo(userInfo);
+  }, [userInfo]);
+
+  // MUDANÇA: O handleChange agora atualiza SOMENTE o estado local, que é super rápido.
   const handleChange = (field: keyof UserInfo, value: string) => {
-    updateUserInfo({ [field]: value });
-    setHasChanges(true);
+    setLocalUserInfo(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
     setHasChanges(false);
-    // Feedback visual
+    // Opcional: a lógica de salvar pode ser movida para o useEffect acima
     const button = document.getElementById('save-button');
     if (button) {
       button.textContent = 'Salvo!';
@@ -34,8 +58,9 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
     }
   };
 
+  // MUDANÇA: A função de cálculo agora usa o estado local para ser instantânea.
   const calculateAdvancedMetrics = () => {
-    const { age, gender, height, weight, bodyFat } = userInfo;
+    const { age, gender, height, weight, bodyFat, activityLevel } = localUserInfo;
     const ageNum = parseInt(age);
     const heightNum = parseFloat(height);
     const weightNum = parseFloat(weight);
@@ -49,20 +74,17 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
     let leanMass = 0;
 
     if (bodyFatNum > 0) {
-      // Fórmula Katch-McArdle (mais precisa com % gordura)
       leanMass = weightNum * (1 - bodyFatNum / 100);
       tmb = 370 + (21.6 * leanMass);
     } else {
-      // Fórmula Harris-Benedict revisada
       if (gender === 'male') {
         tmb = 88.362 + (13.397 * weightNum) + (4.799 * heightNum) - (5.677 * ageNum);
       } else {
         tmb = 447.593 + (9.247 * weightNum) + (3.098 * heightNum) - (4.330 * ageNum);
       }
-      leanMass = weightNum * 0.85; // Estimativa
+      leanMass = weightNum * 0.85;
     }
-
-    // Fatores de atividade mais específicos
+    
     const activityFactors = {
       sedentary: 1.2,
       lightlyActive: 1.375,
@@ -70,8 +92,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
       veryActive: 1.725,
       extraActive: 1.9
     };
-
-    const tdee = tmb * activityFactors[userInfo.activityLevel];
+    const tdee = tmb * activityFactors[activityLevel];
 
     return {
       tmb: Math.round(tmb),
@@ -95,20 +116,22 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
     if (bmi < 30) return 'from-yellow-50 to-yellow-100';
     return 'from-red-50 to-red-100';
   };
-
-  // Calcular peso ideal
+  
+  // MUDANÇA: Usa o estado local.
   const getIdealWeight = () => {
-    const height = parseFloat(userInfo.height);
+    const height = parseFloat(localUserInfo.height);
     if (!height) return null;
-    
     const heightM = height / 100;
-    const idealBMI = 22; // BMI ideal
+    const idealBMI = 22;
     return Math.round(idealBMI * heightM * heightM);
   };
 
   const idealWeight = getIdealWeight();
 
   return (
+    // RESTANTE DO CÓDIGO JSX...
+    // MUDANÇA: Todos os `value` dos inputs e `selects` devem usar `localUserInfo`
+    // Exemplo para o input de Idade:
     <div className="space-y-8 pb-20">
       {/* Cabeçalho */}
       <div className="text-center">
@@ -132,7 +155,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
             </label>
             <input
               type="number"
-              value={userInfo.age}
+              value={localUserInfo.age} // MUDANÇA AQUI
               onChange={(e) => handleChange('age', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               placeholder="Ex: 35"
@@ -148,7 +171,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
               Gênero
             </label>
             <select
-              value={userInfo.gender}
+              value={localUserInfo.gender} // MUDANÇA AQUI
               onChange={(e) => handleChange('gender', e.target.value as 'male' | 'female')}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             >
@@ -166,7 +189,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
             </label>
             <input
               type="number"
-              value={userInfo.height}
+              value={localUserInfo.height} // MUDANÇA AQUI
               onChange={(e) => handleChange('height', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               placeholder="Ex: 175"
@@ -183,7 +206,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
             </label>
             <input
               type="number"
-              value={userInfo.weight}
+              value={localUserInfo.weight} // MUDANÇA AQUI
               onChange={(e) => handleChange('weight', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               placeholder="Ex: 85"
@@ -201,7 +224,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
             </label>
             <input
               type="number"
-              value={userInfo.goalWeight || ''}
+              value={localUserInfo.goalWeight || ''} // MUDANÇA AQUI
               onChange={(e) => handleChange('goalWeight', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               placeholder="Ex: 75"
@@ -218,7 +241,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
               Nível de atividade
             </label>
             <select
-              value={userInfo.activityLevel}
+              value={localUserInfo.activityLevel} // MUDANÇA AQUI
               onChange={(e) => handleChange('activityLevel', e.target.value as UserInfo['activityLevel'])}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             >
@@ -238,7 +261,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
             </label>
             <input
               type="number"
-              value={userInfo.weeklyGoal || ''}
+              value={localUserInfo.weeklyGoal || ''} // MUDANÇA AQUI
               onChange={(e) => handleChange('weeklyGoal', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               placeholder="Ex: 0.5"
@@ -282,7 +305,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
                 </label>
                 <input
                   type="number"
-                  value={userInfo.waist || ''}
+                  value={localUserInfo.waist || ''} // MUDANÇA AQUI
                   onChange={(e) => handleChange('waist', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                   placeholder="Ex: 95"
@@ -298,7 +321,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
                 </label>
                 <input
                   type="number"
-                  value={userInfo.bodyFat || ''}
+                  value={localUserInfo.bodyFat || ''} // MUDANÇA AQUI
                   onChange={(e) => handleChange('bodyFat', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                   placeholder="Ex: 22.5"
@@ -315,7 +338,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
                 </label>
                 <input
                   type="number"
-                  value={userInfo.leanMass || ''}
+                  value={localUserInfo.leanMass || ''} // MUDANÇA AQUI
                   onChange={(e) => handleChange('leanMass', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                   placeholder="Ex: 67.2"
@@ -331,7 +354,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
                   Tipo corporal
                 </label>
                 <select
-                  value={userInfo.bodyType || ''}
+                  value={localUserInfo.bodyType || ''} // MUDANÇA AQUI
                   onChange={(e) => handleChange('bodyType', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                 >
@@ -438,14 +461,14 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, updateUserInfo, c
               )}
 
               {/* Diferença do Peso Ideal */}
-              {idealWeight && userInfo.weight && (
+              {idealWeight && localUserInfo.weight && ( // MUDANÇA AQUI
                 <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Diferença</h4>
                   <p className="text-2xl font-bold text-orange-600">
-                    {Math.abs(parseFloat(userInfo.weight) - idealWeight).toFixed(1)} kg
+                    {Math.abs(parseFloat(localUserInfo.weight) - idealWeight).toFixed(1)} kg
                   </p>
                   <p className="text-sm text-gray-600">
-                    {parseFloat(userInfo.weight) > idealWeight ? 'Acima do ideal' : 'Abaixo do ideal'}
+                    {parseFloat(localUserInfo.weight) > idealWeight ? 'Acima do ideal' : 'Abaixo do ideal'}
                   </p>
                 </div>
               )}
