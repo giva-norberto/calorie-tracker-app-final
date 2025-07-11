@@ -40,5 +40,4 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ initialUserInfo, onSave }) 
     </div>
   );
 };
-
-export default PersonalInfo;
+import useDebounce from '../hooks/useDebounce';  // sem chaves {}, pois é export default
