@@ -15,6 +15,6 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export default useDebounce;
+import useDebounce from '../hooks/useDebounce';
 
 
