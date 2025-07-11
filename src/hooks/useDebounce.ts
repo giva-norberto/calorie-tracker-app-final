@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-function useDebounce<T>(value: T, delay: number): T {
+export function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
@@ -8,13 +8,10 @@ function useDebounce<T>(value: T, delay: number): T {
       setDebouncedValue(value);
     }, delay);
 
-    // Limpa o timeout se value ou delay mudarem antes do tempo acabar
-    return () => clearTimeout(handler);
+    return () => {
+      clearTimeout(handler);
+    };
   }, [value, delay]);
 
   return debouncedValue;
 }
-
-import useDebounce from '../hooks/useDebounce';
-
-
