@@ -227,4 +227,4 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userInfo, setUserInfo }) =>
   );
 };
 
-import useDebounce from '../hooks/useDebounce';
+import { useDebounce } from '../hooks/useDebounce';
