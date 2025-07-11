@@ -1,6 +1,6 @@
 [build]
   publish = "dist"
-  command = "npm install && npm run build" # <-- A correção está nesta linha
+  command = "npm ci && npm run build" # <-- Correção final com 'npm ci'
 
 [build.environment]
   NODE_VERSION = "18"
