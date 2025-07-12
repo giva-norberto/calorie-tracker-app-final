@@ -1,8 +1,10 @@
-import React from 'react'; // <-- Importe React explicitamente
+import React from 'react';
 import ReactDOM from 'react-dom/client';
+import App from './App.tsx'; // Ou './App.jsx' se não for TypeScript
+import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <div>Hello World from CalorieTracker!</div>
+    <App />
   </React.StrictMode>
 );
