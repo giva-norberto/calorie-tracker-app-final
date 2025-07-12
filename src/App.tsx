@@ -1,54 +1,41 @@
-import React, { useState } from 'react';
-import useCalorieTrackerFirebase from './hooks/useCalorieTrackerFirebase';
-import { useAuth } from './hooks/useAuth';
-import AuthWrapper from './components/AuthWrapper';
-import Sidebar from './components/layout/Sidebar';
-import Header from './components/layout/Header';
-import Dashboard from './components/Dashboard';
-import PersonalInfo from './components/PersonalInfo';
-// ... importe outros componentes que você usa
+import { useEffect, useState } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './config/firebase'; // Verifique se o caminho está correto
+
+// Supondo que estes são os seus componentes
+import LoginPage from './components/LoginPage'; 
+import Dashboard from './components/Dashboard'; 
 
 function App() {
-    const [activeSection, setActiveSection] = useState('summary');
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { user } = useAuth();
-    const { data, calculations, loading, error, updateUserInfo, getDailyData } = useCalorieTrackerFirebase();
+  // Este estado controla se a verificação inicial está a acontecer
+  const [isLoading, setIsLoading] = useState(true); 
+  const [user, setUser] = useState(null);
 
-    // GUARDA DE SEGURANÇA: Previne a "tela branca" ao esperar os dados carregarem.
-    if (loading) {
-        return <div className="flex justify-center items-center h-screen bg-gray-100">Carregando...</div>;
-    }
+  useEffect(() => {
+    // onAuthStateChanged fica a "ouvir" se o estado de login muda
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      
+      // AQUI ESTÁ A CORREÇÃO CRUCIAL:
+      // Desliga o "Carregando..." independentemente de haver um utilizador ou não.
+      setIsLoading(false); 
+    });
 
-    if (error) {
-        return <div className="flex justify-center items-center h-screen bg-red-100 text-red-700">Erro: {error}</div>;
-    }
+    // Limpa o "ouvinte" quando o componente é desmontado
+    return () => unsubscribe();
+  }, []); // O array vazio [] garante que isto só roda uma vez
 
-    const renderContent = () => {
-        const currentDate = new Date().toISOString().split('T')[0];
-        const currentDayData = getDailyData(currentDate);
+  // Enquanto está a verificar, mostra a mensagem de "Carregando..."
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
 
-        switch (activeSection) {
-            case 'personalInfo':
-                return <PersonalInfo userInfo={data.userInfo} updateUserInfo={updateUserInfo} calculations={calculations} />;
-            case 'summary':
-            default:
-                return <Dashboard dailyData={currentDayData} tdee={calculations.tdee} currentDate={currentDate} alerts={data.alerts} />;
-        }
-    };
-
-    return (
-        <AuthWrapper>
-            <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-                <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-                <div className="flex-1 flex flex-col overflow-hidden">
-                    <Header title={activeSection} onMenuClick={() => setSidebarOpen(true)} user={{ name: user?.displayName || 'Usuário' }} />
-                    <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                        {renderContent()}
-                    </main>
-                </div>
-            </div>
-        </AuthWrapper>
-    );
+  // Depois de verificar, mostra a página certa
+  return (
+    <div>
+      {user ? <Dashboard /> : <LoginPage />}
+    </div>
+  );
 }
 
 export default App;
