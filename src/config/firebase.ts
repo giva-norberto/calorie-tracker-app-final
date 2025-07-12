@@ -1,9 +1,12 @@
 // Importe as funções que precisa do Firebase
 import { initializeApp } from 'firebase/app';
+// Importe as funções que precisa do Firebase
+import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
-// AQUI ESTÁ A CORREÇÃO: As chaves do seu projeto NOVO estão diretamente no código.
+// CORREÇÃO DEFINITIVA: As chaves do seu projeto NOVO estão diretamente no código.
+// Isto elimina qualquer dependência de variáveis de ambiente ou secrets.
 const firebaseConfig = {
   apiKey: "AIzaSyAWQrYTGa5gXiMzHygx8RbHQnkgyg8etcQ",
   authDomain: "meu-app-calorias-v2.firebaseapp.com",
