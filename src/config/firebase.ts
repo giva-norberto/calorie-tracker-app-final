@@ -54,6 +54,26 @@ const firebaseConfig = {
 // Isso ajuda a identificar erros rapidamente
 const requiredConfig = ['apiKey', 'authDomain', 'projectId'];
 const missingConfig = requiredConfig.filter(key => !firebaseConfig[key]);
+// Importe as funções que você precisa do Firebase
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+
+// 1. Defina a configuração para ler as variáveis de ambiente do Vite
+// O Vite expõe variáveis de ambiente no objeto import.meta.env
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTHDOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECTID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGEBUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGINGSENDERID,
+  appId: import.meta.env.VITE_FIREBASE_APPID,
+};
+
+// 2. Validação para garantir que as variáveis foram carregadas
+// Isso ajuda a identificar erros rapidamente
+const requiredConfigKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+const missingConfig = requiredConfigKeys.filter(key => !firebaseConfig[key]);
 
 if (missingConfig.length > 0) {
   const errorMsg = `❌ Configurações do Firebase ausentes: ${missingConfig.join(', ')}. Verifique seus GitHub Secrets.`;
