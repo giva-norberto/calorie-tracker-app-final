@@ -5,11 +5,11 @@ import { getAuth, onAuthStateChanged, signOut, User, signInWithRedirect, getRedi
 import { auth, googleProvider } from './config/firebase.ts';
 
 // ===================================================================
-// PASSO 1: IMPORTE O SEU COMPONENTE PRINCIPAL AQUI
+// CORREÇÃO: Importando o componente 'Home' do seu projeto.
 // ===================================================================
-// Altere o nome 'SeuComponentePrincipal' e o caminho './pages/SeuComponentePrincipal'
-// para corresponder ao seu arquivo principal.
-import SeuComponentePrincipal from './pages/SeuComponentePrincipal'; 
+// Se o seu componente principal tiver outro nome ou estiver noutra pasta,
+// basta ajustar o nome e o caminho aqui.
+import Home from './components/Home'; 
 
 
 // ===================================================================
@@ -19,7 +19,7 @@ const TelaDeLogin = () => {
   const handleGoogleLogin = async () => {
     try {
       await signInWithRedirect(auth, googleProvider);
-    } catch (error) {
+    } catch (error)      {
       console.error("Erro ao iniciar o login com Google:", error);
     }
   };
@@ -68,11 +68,8 @@ function App() {
     return <div className="loading-screen">Carregando...</div>;
   }
 
-  // Se o utilizador estiver logado, mostra o seu aplicativo principal.
-  // Se não, mostra a tela de login.
-  // O 'handleLogout' é passado para que o seu componente principal possa ter um botão de sair.
-  return user ? <SeuComponentePrincipal user={user} handleLogout={handleLogout} /> : <TelaDeLogin />;
+  // CORREÇÃO: Agora, se o utilizador estiver logado, o componente 'Home' é renderizado.
+  return user ? <Home user={user} handleLogout={handleLogout} /> : <TelaDeLogin />;
 }
 
 export default App;
-
