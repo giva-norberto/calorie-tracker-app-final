@@ -1,0 +1,30 @@
+// src/components/TelaDeLogin.tsx
+
+import React from 'react';
+// Importamos as funções de autenticação necessárias
+import { signInWithRedirect } from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase.ts'; // O caminho para a config é '../config/'
+
+const TelaDeLogin = () => {
+  // Função que inicia o processo de login com o Google
+  const handleGoogleLogin = async () => {
+    try {
+      // Usamos signInWithRedirect para evitar problemas de popup
+      await signInWithRedirect(auth, googleProvider);
+    } catch (error)      {
+      console.error("Erro ao iniciar o login com Google:", error);
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <h1>Bem-vindo ao App de Calorias</h1>
+      <p>Faça login para continuar</p>
+      <button onClick={handleGoogleLogin} className="login-button">
+        Entrar com Google
+      </button>
+    </div>
+  );
+};
+
+export default TelaDeLogin;

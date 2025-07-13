@@ -1,47 +1,24 @@
-/ src/App.tsx
+// src/App.tsx
 
 import React, { useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, signOut, User, signInWithRedirect, getRedirectResult } from 'firebase/auth';
-import { auth, googleProvider } from './config/firebase.ts';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from './config/firebase.ts';
 
-// CORREÇÃO FINAL: Importando o seu arquivo de estilos principal.
-// Esta linha fará com que o seu aplicativo deixe de parecer "desconfigurado".
+// Importando o seu CSS principal para garantir que os estilos sejam aplicados
 import './index.css';
 
-// ===================================================================
-// Importando o componente 'Home' do seu projeto.
-// ===================================================================
-import Home from './components/Home'; 
-
+// Importando os seus componentes/telas
+import Home from './components/Home';
+import TelaDeLogin from './components/TelaDeLogin'; // Assumindo que a tela de login está em seu próprio arquivo
 
 // ===================================================================
-// TELA DE LOGIN (Nenhuma alteração necessária aqui)
+// COMPONENTE DE ROTA PROTEGIDA
+// Este componente verifica se o utilizador está logado.
+// Se estiver, mostra a página solicitada (ex: Home).
+// Se não, redireciona para a página de login.
 // ===================================================================
-const TelaDeLogin = () => {
-  const handleGoogleLogin = async () => {
-    try {
-      await signInWithRedirect(auth, googleProvider);
-    } catch (error)      {
-      console.error("Erro ao iniciar o login com Google:", error);
-    }
-  };
-
-  return (
-    <div className="login-container">
-      <h1>Bem-vindo ao App de Calorias</h1>
-      <p>Faça login para continuar</p>
-      <button onClick={handleGoogleLogin} className="login-button">
-        Entrar com Google
-      </button>
-    </div>
-  );
-};
-
-
-// ===================================================================
-// COMPONENTE PRINCIPAL QUE CONTROLA TUDO
-// ===================================================================
-function App() {
+const RotaProtegida = ({ children }: { children: JSX.Element }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,28 +27,43 @@ function App() {
       setUser(currentUser);
       setLoading(false);
     });
-
-    getRedirectResult(auth).catch((error) => {
-        console.error("Erro no resultado do redirecionamento de login:", error);
-    });
-
     return () => unsubscribe();
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-    }
-  };
 
   if (loading) {
     return <div className="loading-screen">Carregando...</div>;
   }
 
-  // Agora, se o utilizador estiver logado, o componente 'Home' é renderizado.
-  return user ? <Home user={user} handleLogout={handleLogout} /> : <TelaDeLogin />;
+  return user ? children : <Navigate to="/login" />;
+};
+
+
+// ===================================================================
+// COMPONENTE PRINCIPAL DA APLICAÇÃO (App)
+// Agora ele apenas configura as rotas.
+// ===================================================================
+function App() {
+  return (
+    <BrowserRouter basename="/calorie-tracker-app-final/">
+      <Routes>
+        {/* Rota para a página de login */}
+        <Route path="/login" element={<TelaDeLogin />} />
+
+        {/* Rota principal e protegida para o seu aplicativo */}
+        <Route
+          path="/"
+          element={
+            <RotaProtegida>
+              <Home />
+            </RotaProtegida>
+          }
+        />
+        
+        {/* Qualquer outra rota redireciona para a principal */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
