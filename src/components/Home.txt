@@ -1,0 +1,81 @@
+// src/components/Home.tsx
+
+import React, { useState, useEffect } from 'react';
+import { User } from 'firebase/auth';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+import { db } from '../config/firebase.ts'; // Verifique se o caminho está correto
+
+// Tipagem para os dados que você espera receber do Firebase
+interface Refeicao {
+  id: string;
+  nome: string;
+  calorias: number;
+}
+
+// O componente recebe 'user' e 'handleLogout' do App.tsx
+const Home = ({ user, handleLogout }: { user: User, handleLogout: () => void }) => {
+  const [refeicoes, setRefeicoes] = useState<Refeicao[]>([]);
+  const [loading, setLoading] = useState(true); // Estado de carregamento
+
+  // Este useEffect é executado quando o componente é montado
+  useEffect(() => {
+    // Se não houver utilizador, não faz nada
+    if (!user) return;
+
+    // Caminho para a coleção de refeições do utilizador LOGADO
+    const q = query(collection(db, 'users', user.uid, 'refeicoes'));
+
+    // onSnapshot ouve as alterações em tempo real
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const refeicoesData: Refeicao[] = [];
+      querySnapshot.forEach((doc) => {
+        refeicoesData.push({ id: doc.id, ...doc.data() } as Refeicao);
+      });
+      setRefeicoes(refeicoesData);
+      setLoading(false); // Termina o carregamento após receber os dados
+    }, (error) => {
+      console.error("Erro ao buscar dados do Firestore: ", error);
+      setLoading(false); // Termina o carregamento mesmo se der erro
+    });
+
+    // Limpa o listener quando o componente é desmontado
+    return () => unsubscribe();
+  }, [user]); // O efeito depende do 'user'
+
+  // Enquanto os dados estiverem a ser carregados, mostra a mensagem
+  if (loading) {
+    return <div className="loading-screen">Carregando dados do dia...</div>;
+  }
+
+  // Após o carregamento, mostra a aplicação principal
+  return (
+    <div className="calorie-app">
+      <header className="app-header">
+        <h1>Meu App de Calorias</h1>
+        <div className="user-info">
+          <span>Bem-vindo, {user.displayName || 'Usuário'}!</span>
+          <button onClick={handleLogout} className="logout-button">Sair</button>
+        </div>
+      </header>
+      
+      <main>
+        <h2>Refeições de Hoje</h2>
+        <div className="refeicoes-lista">
+          {refeicoes.length > 0 ? (
+            refeicoes.map(refeicao => (
+              <div key={refeicao.id} className="refeicao-item">
+                <span>{refeicao.nome}</span>
+                <span>{refeicao.calorias} kcal</span>
+              </div>
+            ))
+          ) : (
+            <p>Nenhuma refeição adicionada hoje.</p>
+          )}
+        </div>
+        {/* Adicione aqui o formulário para adicionar novas refeições */}
+      </main>
+    </div>
+  );
+};
+
+export default Home;
