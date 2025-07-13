@@ -1,81 +1,72 @@
+// src/App.tsx
+
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
 
-// --- ATENÇÃO: VERIFIQUE ESTE CAMINHO ---
-// O erro acontece aqui. Verifique a sua estrutura de pastas no seu computador.
-// Apenas UMA das linhas de 'import' abaixo deve estar ativa. As outras devem ser apagadas ou comentadas (com // no início).
-
-// Opção 1: Se 'App.tsx' e o seu ficheiro de configuração do Firebase estão na mesma pasta (ex: ambos dentro de 'src'), use esta linha:
-import { auth } from './firebase';
-
-// Opção 2: Se 'App.tsx' está numa subpasta (ex: 'src/components') e o seu ficheiro do Firebase está em 'src', use esta linha:
-// import { auth } from '../firebase';
-
-// Opção 3: Se o seu ficheiro de configuração está numa pasta 'config' (ex: 'src/config/firebase.ts'), use esta linha:
-// import { auth } from './config/firebase';
-
-
-// --- Componentes de Exemplo (Substitua pelos seus componentes reais) ---
-// O código abaixo é apenas um exemplo para a lógica funcionar.
-// Você deve usar os seus próprios componentes de Login e Dashboard.
-
-const LoginPage = () => (
-  <div style={{ textAlign: 'center', marginTop: '50px' }}>
-    <h1>CalorieTracker</h1>
-    <p>Faça login para continuar</p>
-    {/* O seu botão de login real estaria aqui */}
-    <button>Entrar com Google</button>
-  </div>
-);
-
-const Dashboard = () => (
-  <div style={{ textAlign: 'center', marginTop: '50px' }}>
-    <h1>Bem-vindo!</h1>
-    <p>Este é o seu painel de calorias.</p>
-  </div>
-);
-
-// --- Componente Principal da Aplicação ---
+// CORREÇÃO DEFINITIVA: O caminho agora aponta para a pasta 'config'
+// onde o seu arquivo firebase.ts realmente está.
+import { auth, googleProvider } from './config/firebase.ts';
 
 function App() {
-  // Estado para controlar se a verificação inicial de autenticação está a decorrer
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Estado para guardar a informação do utilizador logado
+  // Estado para armazenar as informações do usuário logado
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // useEffect é usado para executar código uma vez, quando o componente é montado.
+  // Efeito para verificar o estado de autenticação quando o componente monta
   useEffect(() => {
-    // onAuthStateChanged é um "ouvinte" do Firebase. Ele avisa-nos
-    // sempre que o estado de login muda.
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      // Atualiza o nosso estado com o utilizador atual (pode ser null)
       setUser(currentUser);
-      
-      // AQUI ESTÁ A CORREÇÃO CRUCIAL:
-      // Independentemente de haver um utilizador ou não, a verificação terminou.
-      // Portanto, definimos o carregamento como 'false'.
-      setIsLoading(false);
+      setLoading(false);
     });
 
-    // Esta função de limpeza é importante para evitar problemas de performance.
+    // Limpa o listener quando o componente desmonta
     return () => unsubscribe();
-  }, []); // O array vazio [] garante que este código só roda uma vez.
+  }, []);
 
-  // Enquanto a verificação inicial está a decorrer, mostramos a mensagem de "Carregando...".
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        Carregando...
-      </div>
-    );
+  // Função para fazer login com o Google
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      // O listener onAuthStateChanged cuidará de atualizar o estado do usuário
+    } catch (error) {
+      console.error("Erro ao fazer login com o Google:", error);
+    }
+  };
+
+  // Função para fazer logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // O listener onAuthStateChanged cuidará de atualizar o estado do usuário para null
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
+  
+  // Renderiza um indicador de carregamento enquanto verifica a autenticação
+  if (loading) {
+    return <div className="loading-screen">Carregando...</div>;
   }
 
-  // Quando isLoading for 'false', o React vai renderizar uma das duas opções abaixo:
   return (
-    <div>
-      {/* Se existe um 'user', mostra o Dashboard. Senão, mostra a LoginPage. */}
-      {user ? <Dashboard /> : <LoginPage />}
+    <div className="app-container">
+      <header className="app-header">
+        <h1>Meu App de Calorias</h1>
+        {user && <p>Bem-vindo, {user.displayName || 'Usuário'}!</p>}
+      </header>
+      <main className="app-main">
+        {user ? (
+          // Se o usuário estiver logado, mostra o botão de logout
+          <button onClick={handleLogout} className="logout-button">
+            Sair (Logout)
+          </button>
+        ) : (
+          // Se não estiver logado, mostra o botão de login
+          <button onClick={handleGoogleLogin} className="login-button">
+            Entrar com Google
+          </button>
+        )}
+      </main>
     </div>
   );
 }
