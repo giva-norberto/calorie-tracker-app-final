@@ -9,7 +9,7 @@ import { auth, googleProvider } from './config/firebase.ts';
 // ===================================================================
 // Se o seu componente principal tiver outro nome ou estiver noutra pasta,
 // basta ajustar o nome e o caminho aqui.
-import Home from './components/Home'; 
+import Dashboard from './components/Dashboard'; 
 
 
 // ===================================================================
@@ -69,7 +69,7 @@ function App() {
   }
 
   // CORREÇÃO: Agora, se o utilizador estiver logado, o componente 'Home' é renderizado.
-  return user ? <Home user={user} handleLogout={handleLogout} /> : <TelaDeLogin />;
+  return user ? <Dashboard user={user} handleLogout={handleLogout} /> : <TelaDeLogin />;
 }
 
 export default App;
