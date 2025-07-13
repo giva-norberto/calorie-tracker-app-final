@@ -1,15 +1,17 @@
-// src/App.tsx
+/ src/App.tsx
 
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, signOut, User, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider } from './config/firebase.ts';
 
+// CORREÇÃO FINAL: Importando o seu arquivo de estilos principal.
+// Esta linha fará com que o seu aplicativo deixe de parecer "desconfigurado".
+import './index.css';
+
 // ===================================================================
-// CORREÇÃO: Importando o componente 'Home' do seu projeto.
+// Importando o componente 'Home' do seu projeto.
 // ===================================================================
-// Se o seu componente principal tiver outro nome ou estiver noutra pasta,
-// basta ajustar o nome e o caminho aqui.
-import Dashboard from './components/Dashboard'; 
+import Home from './components/Home'; 
 
 
 // ===================================================================
@@ -68,8 +70,9 @@ function App() {
     return <div className="loading-screen">Carregando...</div>;
   }
 
-  // CORREÇÃO: Agora, se o utilizador estiver logado, o componente 'Home' é renderizado.
-  return user ? <Dashboard user={user} handleLogout={handleLogout} /> : <TelaDeLogin />;
+  // Agora, se o utilizador estiver logado, o componente 'Home' é renderizado.
+  return user ? <Home user={user} handleLogout={handleLogout} /> : <TelaDeLogin />;
 }
 
 export default App;
+
