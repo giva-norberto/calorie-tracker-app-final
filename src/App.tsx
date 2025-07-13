@@ -8,15 +8,16 @@ import { auth } from './config/firebase.ts';
 // Importando o seu CSS principal para garantir que os estilos sejam aplicados
 import './index.css';
 
-// Importando os seus componentes/telas
-import Home from './components/Home';
-import TelaDeLogin from './components/TelaDeLogin'; // Assumindo que a tela de login está em seu próprio arquivo
+// ===================================================================
+// CORREÇÃO: Adicionando a extensão .tsx aos imports.
+// O processo de build do Vite precisa disso para encontrar os arquivos.
+// ===================================================================
+import Home from './components/Home.tsx';
+import TelaDeLogin from './components/TelaDeLogin.tsx';
 
 // ===================================================================
 // COMPONENTE DE ROTA PROTEGIDA
 // Este componente verifica se o utilizador está logado.
-// Se estiver, mostra a página solicitada (ex: Home).
-// Se não, redireciona para a página de login.
 // ===================================================================
 const RotaProtegida = ({ children }: { children: JSX.Element }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -40,7 +41,7 @@ const RotaProtegida = ({ children }: { children: JSX.Element }) => {
 
 // ===================================================================
 // COMPONENTE PRINCIPAL DA APLICAÇÃO (App)
-// Agora ele apenas configura as rotas.
+// Configura as rotas da aplicação.
 // ===================================================================
 function App() {
   return (
@@ -67,4 +68,5 @@ function App() {
 }
 
 export default App;
+
 
