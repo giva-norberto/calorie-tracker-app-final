@@ -1,41 +1,23 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { signOut } from 'firebase/auth';
-import { auth } from '../config/firebase';
 
 const Home: React.FC = () => {
-  const { user } = useAuth();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Erro ao sair:', error);
-      alert('Erro ao fazer logout. Tente novamente.');
-    }
-  };
-
-  if (!user) return null;
+  const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center text-center p-6">
-      <h1 className="text-3xl font-bold mb-4">Olá, {user.displayName} 👋</h1>
-
-      {user.photoURL && (
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Olá, {user?.displayName || 'Usuário'}</h1>
+      <p>Email: {user?.email}</p>
+      {user?.photoURL && (
         <img
           src={user.photoURL}
-          alt="Foto de perfil"
-          className="w-24 h-24 rounded-full mb-4 shadow-md"
+          alt="Avatar"
+          className="w-24 h-24 rounded-full mt-4 mb-6"
         />
       )}
-
-      <p className="text-lg text-gray-700">
-        <strong>Email:</strong> {user.email}
-      </p>
-
       <button
-        onClick={handleLogout}
-        className="mt-6 bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded transition"
+        onClick={logout}
+        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
       >
         Sair
       </button>
@@ -44,3 +26,4 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
