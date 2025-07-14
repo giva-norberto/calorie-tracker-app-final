@@ -1,23 +1,18 @@
-// src/App.tsx
-
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './config/firebase.ts';
 
-// Importando o seu CSS principal para garantir que os estilos sejam aplicados
+// Importa os estilos principais
 import './index.css';
 
-// ===================================================================
-// CORREÇÃO: Adicionando a extensão .tsx aos imports.
-// O processo de build do Vite precisa disso para encontrar os arquivos.
-// ===================================================================
+// Importa os componentes principais da aplicação
 import Home from './components/Home.tsx';
 import TelaDeLogin from './components/TelaDeLogin.tsx';
 
 // ===================================================================
 // COMPONENTE DE ROTA PROTEGIDA
-// Este componente verifica se o utilizador está logado.
+// Verifica se o usuário está autenticado
 // ===================================================================
 const RotaProtegida = ({ children }: { children: JSX.Element }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -32,25 +27,28 @@ const RotaProtegida = ({ children }: { children: JSX.Element }) => {
   }, []);
 
   if (loading) {
-    return <div className="loading-screen">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600 text-lg">Carregando...</p>
+      </div>
+    );
   }
 
   return user ? children : <Navigate to="/login" />;
 };
 
-
 // ===================================================================
-// COMPONENTE PRINCIPAL DA APLICAÇÃO (App)
-// Configura as rotas da aplicação.
+// COMPONENTE PRINCIPAL DO APP
+// Configura as rotas e navegação
 // ===================================================================
 function App() {
   return (
     <BrowserRouter basename="/calorie-tracker-app-final/">
       <Routes>
-        {/* Rota para a página de login */}
+        {/* Tela de login */}
         <Route path="/login" element={<TelaDeLogin />} />
 
-        {/* Rota principal e protegida para o seu aplicativo */}
+        {/* Rota principal protegida */}
         <Route
           path="/"
           element={
@@ -59,15 +57,16 @@ function App() {
             </RotaProtegida>
           }
         />
-        
-        {/* Qualquer outra rota redireciona para a principal */}
+
+        {/* Redirecionamento padrão para rota principal */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
-import TelaDeLogin from './components/TelaDeLogin';
+export default App;
+
 
 
 
