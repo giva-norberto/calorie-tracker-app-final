@@ -67,6 +67,7 @@ function App() {
   );
 }
 
-export default App;
+import TelaDeLogin from './components/TelaDeLogin';
+
 
 
