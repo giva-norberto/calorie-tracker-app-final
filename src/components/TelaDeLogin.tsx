@@ -1,18 +1,15 @@
 import React from 'react';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../config/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const TelaDeLogin: React.FC = () => {
-  const navigate = useNavigate();
+  const { signInWithGoogle, error, loading, clearError } = useAuth();
 
   const handleLogin = async () => {
+    clearError();
     try {
-      await signInWithPopup(auth, googleProvider);
-      navigate('/'); // Redireciona para a home após login
-    } catch (error) {
-      console.error('Erro ao fazer login com o Google:', error);
-      alert('Falha no login. Tente novamente.');
+      await signInWithGoogle();
+    } catch {
+      // erro tratado no hook
     }
   };
 
@@ -22,12 +19,15 @@ const TelaDeLogin: React.FC = () => {
       <p className="mb-6">Faça login para continuar</p>
       <button
         onClick={handleLogin}
-        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
+        disabled={loading}
+        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition disabled:opacity-50"
       >
-        Entrar com Google
+        {loading ? 'Entrando...' : 'Entrar com Google'}
       </button>
+      {error && <p className="mt-4 text-red-600">{error}</p>}
     </div>
   );
 };
 
 export default TelaDeLogin;
+
